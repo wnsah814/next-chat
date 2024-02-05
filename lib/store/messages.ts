@@ -17,17 +17,23 @@ export type Imessage = {
 interface MessageState {
   messages: Imessage[];
   actionMessage: Imessage | undefined;
+  optimisticIds: string[];
   addMessage: (message: Imessage) => void;
   setActionMessage: (message: Imessage | undefined) => void;
   optimisticDeleteMessage: (messageId: string) => void;
   optimisticUpdateMessage: (updateMessage: Imessage) => void;
+  setoptimisticIds: (id: string) => void;
 }
 
 export const useMessage = create<MessageState>((set) => ({
   messages: [],
+  optimisticIds: [],
   actionMessage: undefined,
-  addMessage: (message) =>
-    set((state) => ({ messages: [...state.messages, message] })),
+  addMessage: (newMessage) =>
+    set((state) => ({
+      messages: [...state.messages, newMessage],
+      optimisticIds: [...state.optimisticIds, newMessage.id],
+    })),
   setActionMessage: (message) => set(() => ({ actionMessage: message })),
   optimisticDeleteMessage: (messageId) =>
     set((state) => ({
@@ -43,4 +49,6 @@ export const useMessage = create<MessageState>((set) => ({
         return message;
       }),
     })),
+  setoptimisticIds: (id: string) =>
+    set((state) => ({ optimisticIds: [...state.optimisticIds, id] })),
 }));
