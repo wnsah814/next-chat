@@ -13,8 +13,6 @@ export default async function Page() {
   const supabase = createClient(cookieStore);
   const { data } = await supabase.auth.getSession();
 
-  // console.log(data.session?.user);
-
   return (
     <>
       <div className="max-w-3xl mx-auto md:py-10 h-screen">
