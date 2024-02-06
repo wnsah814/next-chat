@@ -6,10 +6,12 @@ import { DeleteAlert, EditAlert } from "./MessageActions";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import { ArrowDown } from "lucide-react";
+import LoadMoreMessages from "./LoadMoreMessages";
 
 export default function ListMessages() {
   const scrollRef = useRef() as React.MutableRefObject<HTMLDivElement>;
   const [userScrolled, setUserScrolled] = useState(false);
+  const [notification, setNotification] = useState(0);
   const {
     messages,
     addMessage,
@@ -41,6 +43,13 @@ export default function ListMessages() {
               addMessage(newMessage as Imessage);
             }
           }
+          const scrollContainer = scrollRef.current;
+          if (
+            scrollContainer.scrollTop <
+            scrollContainer.scrollHeight - scrollContainer.clientHeight - 10
+          ) {
+            setNotification((current) => current + 1);
+          }
         }
       )
       .on(
@@ -67,7 +76,7 @@ export default function ListMessages() {
   useEffect(() => {
     const scrollContainer = scrollRef.current;
 
-    if (scrollContainer) {
+    if (scrollContainer && !userScrolled) {
       scrollContainer.scrollTop = scrollContainer.scrollHeight;
     }
   }, [messages]);
@@ -79,36 +88,57 @@ export default function ListMessages() {
         scrollContainer.scrollTop <
         scrollContainer.scrollHeight - scrollContainer.clientHeight - 10;
       setUserScrolled(isScroll);
+      if (
+        scrollContainer.scrollTop ===
+        scrollContainer.scrollHeight - scrollContainer.clientHeight - 10
+      ) {
+        setNotification(0);
+      }
     }
   };
 
   const scrollDown = () => {
+    setNotification(0);
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }
+  };
   return (
-    <div
-      className="flex-1 flex flex-col p-5 h-full overflow-y-auto"
-      ref={scrollRef}
-      onScroll={handleOnScroll}
-    >
-      <div className="flex-1"></div>
-      <div className="space-y-7">
-        {messages.map((v, idx) => (
-          <Message key={idx} message={v} />
-        ))}
+    <>
+      <div
+        className="flex-1 flex flex-col p-5 h-full overflow-y-auto gap-5"
+        ref={scrollRef}
+        onScroll={handleOnScroll}
+      >
+        <div className="flex-1">
+          <LoadMoreMessages />
+        </div>
+        <div className="space-y-7">
+          {messages.map((v, idx) => (
+            <Message key={idx} message={v} />
+          ))}
+        </div>
+
+        <DeleteAlert />
+        <EditAlert />
       </div>
       {userScrolled && (
-        <div className="absolute bottom-20 right-1/2">
-          <div
-            className="w-10 h-10 bg-blue-500 rounded-full justify-center items-center flex mx-auto border cursor-pointer hover:scale-110 transition-all"
-            onClick={scrollDown}
-          >
-            <ArrowDown />
-          </div>
+        <div className="absolute bottom-20 w-full">
+          {notification ? (
+            <div
+              className="w-36 mx-auto bg-yellow-200 p-1 rounded-md cursor-pointer"
+              onClick={scrollDown}
+            >
+              New {notification} messages
+            </div>
+          ) : (
+            <div
+              className="w-10 h-10 bg-yellow-200 rounded-full justify-center items-center flex mx-auto border cursor-pointer hover:scale-110 transition-all"
+              onClick={scrollDown}
+            >
+              <ArrowDown />
+            </div>
+          )}
         </div>
       )}
-      <DeleteAlert />
-      <EditAlert />
-    </div>
+    </>
   );
 }
